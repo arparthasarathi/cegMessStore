@@ -1,52 +1,63 @@
-<?php echo validation_errors(); ?>
-<?php
-if(isset($msg)) echo $msg;
-if(isset($error))
-{
-foreach($error as $each)
-echo $each;
-} 
-?>
-
 <?php echo form_open('items/return_confirmation') ?>
-<div>
-<div>
-<table>
-<tr>
-<td>
-<h4><input type='hidden' name='selectedMess' value='<?php echo $selectedMess;?>'/>
-<?php echo $selectedMess;?>
-</h4>
-</td>
-</tr>
-<?php 
-for($i=0;$i<count($selectedItems);$i++)
-{
-?>
-<tr>
-<td>
-<h4><input type='hidden' name='selectedItems[]' value='<?php echo $selectedItems[$i];?>'/>
-<?php echo $selectedItems[$i];?>
-</h4>
-</td>
-<input type="hidden" name='quantitySupplied[]' value='<?php echo $quantitySupplied[$i];?>'/>
+	<div class="row"></div>
+	<div class="row">
+		<div class="col s6">
+			 <span class="blue-text text-darken-2">Selected Mess</span>
+		</div>
+		<div class="col s6">
+			<span class="blue-text text-darken-2"><?php echo $selectedMess;?></span>
+                        <input type='hidden' name='selectedMess' value='<?php echo $selectedMess;?>'/>
+                </div>
+	</div>
 
-<input type="hidden" name='quantityAvailable[]' value='<?php echo $quantityAvailable[$i];?>'/>
-<input type="hidden" name='latestRate[]' value='<?php echo $latestRate[$i];?>'/>
-<td>
-<h4><input type='hidden' name='selectedQuantity[]' value='<?php echo $selectedQuantity[$i];?>'/>
-<?php echo $selectedQuantity[$i]." kg/l";?>
-</h4>
-</td>
-</tr>
-<?php
-}
-?>
-</table>
-<br/><br/>	
-<br/><br/>
-<button type="submit" name="submit">Confirm</button>
-<button type="cancel" name="cancel" onclick="window.history.back()">Back</button>
-</div>
-</div>
+	<div class="row">
+                <div class="col s6">
+                         <span class="blue-text text-darken-2">Selected Items</span>
+                </div>
+                <div class="col s6">
+                        <span class="blue-text text-darken-2">Quantity to Return</span>
+                </div>
+        </div>
+
+
+	<?php 
+		for($i=0;$i<count($selectedItems);$i++)
+		{
+		?>
+		<div class="row">
+			<div class="blue-text text-darken-2 col s6">
+				<input type='hidden' name='selectedItems[]' value='<?php echo $selectedItems[$i];?>'/>
+				<?php echo $selectedItems[$i];?>
+			</div>
+			<input type="hidden" name='quantitySupplied[]' value='<?php echo $quantitySupplied[$i];?>'/>
+			<input type="hidden" name='quantityAvailable[]' value='<?php echo $quantityAvailable[$i];?>'/>
+			<input type="hidden" name='latestRate[]' value='<?php echo $latestRate[$i];?>'/>
+			<div class="blue-text text-darken col s6">
+				<input type='hidden' name='selectedQuantity[]' value='<?php echo $selectedQuantity[$i];?>'/>
+				<?php echo $selectedQuantity[$i]." kg/l";?>
+			</div>
+		</div>
+		<?php
+		}
+		?>
+
+	<div class="row"></div>
+	<div class="row">
+                <div class="col s8 offset-s3">
+
+                         <button class="btn waves-effect waves-light btn-large" 
+                                        value="submit" type="submit" name="submit">
+                         Confirm
+                            <i class="glyphicon glyphicon-chevron-right"></i>
+                         </button>
+
+                         <button class="btn waves-effect waves-light red darken-1 btn-large" 
+                                        value="cancel" type="cancel" name="cancel">
+                         Back
+                            <i class="glyphicon glyphicon-remove"></i>
+                        </button>
+                </div>
+        </div>
+
 </form>
+</div>

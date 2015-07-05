@@ -1,14 +1,3 @@
-<?php echo validation_errors(); ?>
-<?php
-if(isset($msg)) echo $msg;
-if(isset($error))
-{
-foreach($error as $each)
-echo $each;
-} 
-?>
-
-<div class="container">
 <?php echo form_open('items/issue_confirmation') ?>
 	<div class="row"></div>
 	<div class="row">
@@ -20,6 +9,16 @@ echo $each;
 			<input type='hidden' name='selectedMess' value='<?php echo $selectedMess;?>'/>
                 </div>
         </div>
+	<div class="row">
+                <div class="col s6">
+                         <span class="blue-text text-darken-2">Selected Items</span>
+                </div>
+                <div class="col s6">
+                        <span class="blue-text text-darken-2">Quantity to Issue</span>
+                </div>
+        </div>
+
+
 	<?php 
 	for($i=0;$i<count($selectedItems);$i++)
 	{				

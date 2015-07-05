@@ -23,27 +23,11 @@ border-radius: 4px;
 }
 
 </style>
-<script>
-function moveAll(from, to) {
-	$('#'+from+' option').remove().appendTo('#'+to); 
-}
-
-function moveSelected(from, to) {
-	$('#'+from+' option:selected').remove().appendTo('#'+to); 
-}
-function selectAll() {
-	$("#to option").attr("selected","selected");
-}
-</script>
 <?php
-if(isset($msg)) 
-print_r($msg); 
-
 $decodedTableData = json_decode($tableData,true);
 $size = count($decodedTableData['itemNames']);
 ?>
-<div class="container">
-	<form name="selection" method="post"  action="issue_item" onsubmit="return selectAll()"> 
+	<form name="selection" method="post"  action="issue_item"> 
 	<div class="row">
 
 		<div class="input-field col s6 offset-s3">
@@ -62,54 +46,35 @@ $size = count($decodedTableData['itemNames']);
 	</div>
 
 	<div class="row">
-
-		<div class = "input-field col s4">
-			<select class="browser-default" multiple size=20 id="from">
 			<?php
-				foreach($decodedTableData['itemNames'] as $each)
+				for($i=0;$i<count($decodedTableData['itemNames']);$i++)
 				{
 				?>
-					<option value='<?php echo $each;?>'><?php echo $each;?></option>
+		<div class='row'>
+		<div class = "input-field col s4">
+		<p>
+			<input type='checkbox' value='<?php echo $decodedTableData['itemNames'][$i];?>' 
+				id='<?php echo $decodedTableData['itemNames'][$i];?>' 
+					onclick="document.getElementById('<?php echo 'txt'.$decodedTableData['itemNames'][$i];?>').disabled=!this.checked;"
+					 name='selectedItems[]'/>
+					<label for='<?php echo $decodedTableData['itemNames'][$i];?>'><?php echo $decodedTableData['itemNames'][$i];?></label>
+		</p>
+		</div>
+		<div class="input-field col s4">
+                        <label class="blue-text text-darken-2"><?php echo $decodedTableData['quantityAvailable'][$i];?></label>
+                        <input type="hidden" name='quantityAvailable[]' value='<?php echo $decodedTableData['quantityAvailable'][$i];?>'/>
+                        <input type="hidden" name='latestRate[]' value='<?php echo $decodedTableData['latestRate'][$i];?>'/>
+                </div>
+                <div class="input-field col s4">
+                        <input type="text" name="selectedQuantity[]" value="" id='<?php echo 'txt'.$decodedTableData['itemNames'][$i];?>' disabled/>
+                        <label for="last_name">Enter Quantity</label>
+                </div>
+		
+		</div>
 				<?php
 				}
 			?>
 
-			</select>
-		</div>
-	
-			
-		<div class = "input-field col s4">
-			<div class="controls">
-				<div class="row">
-				<a href="javascript:moveAll('from', 'to')" class="btn waves-effect waves-light">
-				&gt;&gt;
-				</a> 
-				</div>
-				<div class="row">
-				<a href="javascript:moveSelected('from', 'to')" class="btn waves-effect waves-light">
-				&gt;
-				</a> 
-				</div>
-				<div class="row">
-				<a href="javascript:moveSelected('to', 'from')" class="btn waves-effect waves-light">
-				&lt;
-				</a> 
-				</div>
-				<div class="row">
-				<a href="javascript:moveAll('to', 'from')" href="#" 
-							class="btn waves-effect waves-light">
-				&lt;&lt;
-				</a>
-				</div>
-			 </div>
-		</div>
-			
-		<div class = "input-field col s4">
-			<select class="browser-default" multiple id="to" size=20 name="selectedItems[]">
-			</select>
-		</div>
-	</div>
-	
 	<div class="row">
 		<div class="col s8 offset-s3">
 

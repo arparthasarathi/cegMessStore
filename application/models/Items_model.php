@@ -12,10 +12,12 @@ class Items_model extends CI_Model {
 
 		for($i=0;$i<count($data['itemName']);$i++)
 		{
+			$item = strtoupper($data['itemName'][$i]);
 			$insert = array(
-					'itemName' => $data['itemName'][$i],
+					'itemName' => $item,
 					'latestRate' => $data['itemRate'][$i],
-					'quantityAvailable' => $data['quantityAvailable'][$i]
+					'quantityAvailable' => $data['quantityAvailable'][$i],
+					'minimumQuantity' => $data['minimumQuantity'][$i]
 				       );
 			$this->db->trans_start();
 			if(!$this->db->insert('itemsTable',$insert))
@@ -81,11 +83,13 @@ class Items_model extends CI_Model {
 		$quantityAvailable = $data['quantityAvailable'];
 		$selectedQuantity = $data['selectedQuantity'];
 		$selectedMess = $data['selectedMess'];
-
 		for($i=0;$i<count($itemNames);$i++)
 		{
 			$eachAvailable = $quantityAvailable[$i];
+
+
 			$eachSelected = $selectedQuantity[$i];
+
 			if($eachAvailable > $eachSelected)
 			{
 				$diff = $eachAvailable - $eachSelected;
@@ -112,14 +116,19 @@ class Items_model extends CI_Model {
 	public function insert_to_mess_consumption_table($data)
 	{
 		$size = count($data['selectedItems']);
+		$totalAmount = 0;
+		$amount = 0;
 		for($i=0;$i<$size;$i++)
 		{
+			$amount = ($data['selectedQuantity'][$i] * $data['latestRate'][$i]);
+			$totalAmount += $amount;
 			$insert = array(
 					'messName' => $data['selectedMess'],
 					'itemName' => $data['selectedItems'][$i],
 					'suppliedDate' => date('Y-m-d'),
 					'quantitySupplied' => $data['selectedQuantity'][$i],
 					'rate' => $data['latestRate'][$i],
+					'amount' => ($amount)
 				       );
 			$this->db->trans_start();
 			if(!$this->db->insert('messConsumptionTable',$insert))
@@ -129,42 +138,111 @@ class Items_model extends CI_Model {
 				return $error['message'];
 			}
 			else
-			{
+			{	
+
 				$this->db->trans_complete();
-				continue;
+				continue;			
 			}
 		}
+
+		$billReturn = $this->insert_to_mess_bill($data['selectedMess'],date('Y-m-d'),$totalAmount);
+		if($billReturn == 1)
+		{
+			return 1;
+		}
+		else 
+		{
+			return $billReturn;
+		}
+
 		return 1;	
 	}
 
+	public function insert_to_mess_bill($selectedMess,$billDate,$totalAmount)
+	{
+		$insert = array(
+				'messName' => $selectedMess,
+				'date' => $billDate,
+				'totalAmount' => $totalAmount
+			       );
+		$this->db->trans_start();
+		if(!$this->db->insert('messBill',$insert))
+		{
+			$error=$this->db->error();
+			$this->db->trans_complete();
+			return $error['message'];
+		}
+		$this->db->trans_complete();
+		return 1;
+	}
+
 	public function update_mess_consumption_table($data)
-        {
-                $size = count($data['selectedItems']);
-                for($i=0;$i<$size;$i++)
-                {
-			
-                        $update = array(
-                                        'quantitySupplied' => $data['actualSupplied'][$i],
-                                       );
-			error_log($data['actualSupplied'][$i]);
-                        $this->db->trans_start();
+	{
+		$size = count($data['selectedItems']);
+		$totalReducedAmount = 0;
+		$amount =0;
+		for($i=0;$i<$size;$i++)
+		{
+			$amount = ($data['actualSupplied'][$i] * $data['latestRate'][$i]);
+			$totalReducedAmount += ($data['selectedQuantity'][$i] * $data['latestRate'][$i]);
+			$update = array(
+					'quantitySupplied' => $data['actualSupplied'][$i],
+					'amount' => $amount
+				       );
+			$this->db->trans_start();
 			$this->db->where('messName',$data['selectedMess']);
 			$this->db->where('itemName',$data['selectedItems'][$i]);
 			$this->db->where('suppliedDate',date('Y-m-d'));
-                        if(!$this->db->update('messConsumptionTable',$update))
-                        {
-                                $error=$this->db->error();
-                                $this->db->trans_complete();
-                                return $error['message'];
-                        }
-                        else
-                        {
-                                $this->db->trans_complete();
-                                continue;
-                        }
-                }
-                return 1;
-        }
+			if(!$this->db->update('messConsumptionTable',$update))
+			{
+				$error=$this->db->error();
+
+				$this->db->trans_complete();
+				return $error['message'];
+			}
+			else
+			{
+
+				$this->db->trans_complete();
+				continue;		 
+			}
+		}
+		$billReturn = $this->update_mess_bill($data['selectedMess'],date('Y-m-d'),$totalReducedAmount);
+		if($billReturn == 1)
+		{
+
+			return 1;
+		}
+		else
+		{
+			return $billReturn;
+		}
+
+
+		return 1;
+	}
+
+
+	public function update_mess_bill($selectedMess,$billDate,$reductionAmount)
+	{
+
+		$this->db->trans_start();	
+		$this->db->where('messName',$selectedMess);
+		$this->db->where('date',$billDate);
+		$column = 'totalAmount-'.$reductionAmount;
+		$this->db->set('totalAmount',$column,FALSE);	
+
+		if(!$this->db->update('messBill'))
+		{
+			$error=$this->db->error();
+			$this->db->trans_complete();
+			return $error['message'];
+		}
+		$this->db->trans_complete();
+		return 1;	
+
+	}
+
 	public function update_stock($data)
 	{
 		$size = count($data['selectedItems']);
@@ -191,17 +269,38 @@ class Items_model extends CI_Model {
 		return 1;
 	}
 
+
+	
+	public function get_lesser_items()
+	{
+		$this->db->select('*');
+		$this->db->where('quantityAvailable < minimumQuantity');
+		$return['itemNames'] = array();
+		$return['quantityAvailable'] = array();
+		$items = $this->db->get('itemsTable');
+		foreach($items->result() as $row)
+		{
+
+			array_push($return['itemNames'],$row->itemName);
+			array_push($return['quantityAvailable'],$row->quantityAvailable);
+		}
+		return $return;
+	}
+
 	public function get_consumed_items($messName,$date)
 	{
 		$this->db->where('suppliedDate',$date);
 		$this->db->where('messName',$messName);
 		$return['itemNames'] = array();
 		$return['quantitySupplied'] = array();
+		$return['latestRate'] = array();
 		$items = $this->db->get('messConsumptionTable');
 		foreach($items->result() as $row)
 		{
 			array_push($return['itemNames'],$row->itemName);
+
 			array_push($return['quantitySupplied'],$row->quantitySupplied);
+			array_push($return['latestRate'],$row->rate);
 		}
 		return $return;
 	}
