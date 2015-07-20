@@ -25,6 +25,7 @@ class Items extends CI_Controller {
 	{
 		parent::__construct();
 		$this->load->model('items_model');
+		$this->load->model('mess_model');
 		$this->load->helper('form');
 		$this->load->helper('url');
 		$this->load->library('session');
@@ -37,6 +38,26 @@ class Items extends CI_Controller {
 	public function getMessTypes()
 	{
 		return $this->messTypes;
+	}
+
+	public function get_mess_types()
+	{
+		
+		if(!$this->ion_auth->logged_in())
+			redirect('auth/login','refresh');
+		else
+		{
+			$data['username'] = $this->ion_auth->user()->row()->username;
+
+			$data['group'] = $this->ion_auth->get_logged_in_user_group_names();
+
+			$jsonMessTypes = ($this->mess_model->get_mess_types_model());
+
+			$messTypes = json_decode($jsonMessTypes,true);
+
+			return $messTypes['messName'];
+		}
+
 	}
 
 	public function check_for_lesser_items()
