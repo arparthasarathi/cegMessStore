@@ -106,7 +106,58 @@ class Items extends CI_Controller {
 		echo json_encode($consumedItems);
 	}
 
-
+	public function edit_row_form()
+	{
+		$suppliedDate = $this->input->post('suppliedDate');
+		$messName= $this->input->post('messName');
+		$itemName = $this->input->post('itemName');
+		$quantitySupplied = $this->input->post('quantitySupplied');
+		$latestRate = $this->input->post('latestRate');
+		$form = "
+			<form name = 'edit_row' action = '../items/update_issued_items' method = 'post'>
+			<div class = 'row'>
+			<div class='input-field'>
+			<span class='blue-text text-darken-2'>Supplied Date</span>
+			<input type='text' value='".$suppliedDate."' id = '".$suppliedDate."Disabled' name='suppliedDateDisabled' disabled/>
+			<input type='hidden' value='".$suppliedDate."' id = '".$suppliedDate."' name='modalSuppliedDate'/>
+			</div>
+			</div>
+			<div class = 'row'>
+			<div class='input-field'>
+			<span class='blue-text text-darken-2'>Item Name</span>
+			<input type='hidden' value='".urldecode($itemName)."' id= '".$itemName."' name='modalItemName'/>	
+			<input type='text' value='".urldecode($itemName)."' id= '".$itemName."Disabled' name='itemNameDisabled' disabled/>
+			</div>
+			</div>
+			<div class = 'row'>
+			<div class='input-field'>
+			<span class='blue-text text-darken-2'>Quantity SUpplied</span>
+			<input type='text' value='".$quantitySupplied."' id='".$quantitySupplied."' name='modalQuantitySupplied'/>
+			</div>
+			</div>
+			<div class = 'row'>
+			<div class='input-field'>
+			<span class='blue-text text-darken-2'>Latest Rate</span>
+			<input type='text' value='".$latestRate."'  id='".$latestRate."' name='modalRate'/>
+			<input type='hidden' value='".urldecode($messName)."' name='modalMessName'/>
+			</div>
+			</div>
+			<div class='row'>
+			<div class='col s8 offset-s3'>
+		<!--	<a href='javascript:submit_update();' class='btn waves-effect waves-light btn-large' value='submit' type='submit' name='submit'>-->
+			<button class='btn waves-effect waves-light btn-large' value='submit' type='submit' name='submit'>
+			Submit
+			<i class='glyphicon glyphicon-chevron-right'></i>	
+			</button>
+			<button class='btn waves-effect waves-light red darken-1 btn-large' value='reset' type='reset' name='cancel'>
+			Cancel
+			<i class='glyphicon glyphicon-remove'></i>
+			</button>
+			</div>
+			</div>
+			</form>";
+		echo $form;
+	}
 
 	public function return_confirmation()
 	{
@@ -407,4 +458,50 @@ class Items extends CI_Controller {
 		}
 
 	}
+
+	public function edit_issued_items()
+	{
+
+		if(!$this->ion_auth->logged_in())
+			redirect('auth/login','refresh');
+		else {
+			$data['username'] = $this->ion_auth->user()->row()->username;
+
+			$data['group'] = $this->ion_auth->get_logged_in_user_group_names();
+			$data['title'] = " Edit Mess Consumption";
+			$this->load->view('templates/header');
+			$this->load->view('templates/body',$data);
+			$data['messTypes'] = $this->get_mess_types();
+			$this->load->view('items/edit_issued_items',$data);
+		}
+	}
+
+	public function update_issued_items($data="")
+	{
+		if(!$this->ion_auth->logged_in())
+                        redirect('auth/login','refresh');
+                else {
+                        $data = $this->session->flashdata('data');
+			$data['username'] = $this->ion_auth->user()->row()->username;
+                        $data['group'] = $this->ion_auth->get_logged_in_user_group_names();
+			$data['suppliedDate'] = $this->input->post('modalSuppliedDate');
+			$data['itemName'] = urldecode($this->input->post('modalItemName'));
+			$data['quantitySupplied'] = $this->input->post('modalQuantitySupplied');
+			$data['latestRate'] = $this->input->post('modalRate');
+			$data['messName'] = urldecode($this->input->post('modalMessName'));
+			$return = $this->items_model->update_issued_items($data);
+			if($return == 1)
+
+				redirect('reports/mess_consumption',$data);
+			else
+			{
+				$data['error'] = $return;
+				redirect('reports/mess_consumption',$data);
+			}
+
+		}
+
+	}
+
+
 }

@@ -158,6 +158,33 @@ class Items_model extends CI_Model {
 		return 1;	
 	}
 
+	public function update_issued_items($data)
+	{
+		$this->db->trans_start();
+		$this->db->where('suppliedDate',$data['suppliedDate']);
+		$this->db->where('itemName',$data['itemName']);
+		$this->db->where('messName',$data['messName']);
+		$this->db->set('quantitySupplied',$data['quantitySupplied']);
+		$this->db->set('rate',$data['latestRate']);
+		$amount = $data['quantitySupplied'] * $data['latestRate'];
+		$this->db->set('amount',$amount);
+		if(!$this->db->update('messConsumptionTable'))
+                        {
+
+                                $error=$this->db->error();
+
+                                $this->db->trans_complete();
+                                return $error['message'];
+                        }
+                        else
+                        {
+
+                                $this->db->trans_complete();
+                                return 1;
+                        }
+
+	}
+
 	public function insert_to_mess_bill($selectedMess,$billDate,$totalAmount)
 	{
 		$insert = array(
