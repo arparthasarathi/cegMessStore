@@ -223,6 +223,40 @@ class Items_model extends CI_Model {
 		return 1;	
 	}
 
+	public function insert_to_mess_return_table($data)
+	{
+		$size = count($data['selectedItems']);
+		$totalAmount = 0;
+		$amount = 0;
+		for($i=0;$i<$size;$i++)
+		{
+			$amount = ($data['selectedQuantity'][$i] * $data['latestRate'][$i]);
+			$totalAmount += $amount;
+			$insert = array(
+					'messName' => $data['selectedMess'],
+					'itemName' => $data['selectedItems'][$i],
+					'returnedDate' => date('Y-m-d'),
+					'quantityReturned' => $data['selectedQuantity'][$i],
+					'rate' => $data['latestRate'][$i],
+					'amount' => ($amount)
+				       );
+			$this->db->trans_start();
+			if(!$this->db->insert('messReturnTable',$insert))
+			{
+				$error=$this->db->error();
+				$this->db->trans_complete();
+				return $error['message'];
+			}
+			else
+			{	
+
+				$this->db->trans_complete();
+				continue;			
+			}
+		}
+		return 1;	
+	}
+
 	public function update_issued_items($data)
 	{
 		$this->db->trans_start();

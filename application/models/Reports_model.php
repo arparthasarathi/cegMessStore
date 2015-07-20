@@ -32,6 +32,33 @@ class Reports_model extends CI_Model {
 		return $return;
 	}
 
+public function generate_mess_return($messName,$from,$to)
+	{
+		$this->db->select('*');
+		$this->db->where('messName',$messName);
+		$this->db->where('returnedDate >= ',$from);
+		$this->db->where('returnedDate <= ',$to);
+		$this->db->order_by('returnedDate','desc');
+		$return['itemNames'] = array();
+		$return['quantityReturned'] = array();
+		$return['returnedDate'] = array();
+		$return['rate'] = array();
+		$return['amount'] = array();
+		$items = $this->db->get('messReturnTable');
+		foreach($items->result() as $row)
+		{
+			array_push($return['itemNames'],$row->itemName);
+			array_push($return['quantityReturned'],$row->quantityReturned);
+			array_push($return['returnedDate'],$row->returnedDate);
+			array_push($return['rate'],$row->rate);
+			array_push($return['amount'],$row->amount);
+		}
+		return $return;
+	}
+
+
+
+
 	public function generate_mess_bill($messName,$from,$to)
 	{
 		$this->db->select('*');

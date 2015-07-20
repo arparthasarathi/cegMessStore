@@ -105,6 +105,30 @@ class Reports extends CI_Controller {
 
 	}
 
+	public function get_mess_return_report($messName,$from,$to)
+	{
+		if(!$this->ion_auth->logged_in())
+			redirect('auth/login','refresh');
+		else
+		{
+			$data['username'] = $this->ion_auth->user()->row()->username;
+
+			$data['group'] = $this->ion_auth->get_logged_in_user_group_names();
+
+			$messName = urldecode($messName);
+			$from = urldecode($from);
+			$to= urldecode($to);
+			$from = date('Y-m-d',strtotime($from));
+			$to = date('Y-m-d',strtotime($to));
+			$messReturn = ($this->reports_model->generate_mess_return($messName,$from,$to));
+			echo json_encode($messReturn);
+		}
+
+	}
+
+
+
+
 	public function mess_bill()
 	{
 
@@ -141,6 +165,29 @@ class Reports extends CI_Controller {
 			$this->load->view('reports/mess_consumption',$data);
 		}
 	}
+
+	public function mess_return()
+	{
+		if(!$this->ion_auth->logged_in())
+			redirect('auth/login','refresh');
+		else {
+			$data['title'] = "Mess Returns";
+			$data['username'] = $this->ion_auth->user()->row()->username;
+
+			$data['group'] = $this->ion_auth->get_logged_in_user_group_names();
+
+			$this->load->view('templates/header');
+			$this->load->view('templates/body',$data);
+			$data['messTypes'] = $this->getMessTypes();
+			$this->load->view('reports/mess_return',$data);
+		}
+	}
+
+
+	
+
+
+
 
 }
 
