@@ -10,12 +10,16 @@ gutter: 2, // Spacing from edge
 belowOrigin: true // Displays dropdown below the button
 });
 });
+var admin = false;
 </script>
 
 <ul id="reports" class="dropdown-content">
 <li><a href='<?php echo base_url()."reports/mess_consumption";?>'>Mess Consumption</a></li>
 <li class="divider"></li>
 <li><a href='<?php echo base_url()."reports/mess_bill";?>'>Mess Bill</a></li>
+<li class="divider"></li>
+<li><a href='<?php echo base_url()."reports/mess_return";?>'>Mess Returns</a></li>
+
 <li class="divider"></li>
 <li><a href="#!">Payment History</a></li>
 </ul>
@@ -34,6 +38,30 @@ belowOrigin: true // Displays dropdown below the button
 <li><a href='<?php echo base_url()."items/add_item";?>'>Add New Items</a></li>
 </ul>
 
+<ul id="account" class="dropdown-content">
+<li><a href='<?php echo base_url()."auth/change_password";?>'>Change Password</a></li>
+ <li class="divider"></li>
+<li><a href='<?php echo base_url()."auth/logout";?>'>Logout</a></li>
+</ul>
+
+
+
+
+<?php
+if(isset($group))
+if(in_array('admin',$group))
+{
+?>
+<script>
+admin = true;
+</script>
+<ul id="edit" class="dropdown-content">
+<li><a href='<?php echo base_url()."items/edit_issued_items";?>'>Issued Items</a></li>
+<li class="divider"></li>
+<li><a href='<?php echo base_url()."items/edit_items";?>'>Items in stock</a></li>
+</ul>
+<?php
+}?>
 <div class="navbar-fixed">
 <nav>
 <div class="nav-wrapper">
@@ -57,7 +85,26 @@ belowOrigin: true // Displays dropdown below the button
 <span class="glyphicon glyphicon-chevron-down"></span>
 </a>
 </li>	
-<li><a href="#1">Logout</a></li>
+
+<?php
+if(isset($group))
+if(in_array('admin',$group))
+{
+?>
+<li>
+<a class='dropdown-button' href='#' data-activates='edit'>Edit
+<span class="glyphicon glyphicon-chevron-down"></span>
+</a>
+</li>
+<?php
+}
+?>
+<li>
+<a class='dropdown-button' href='#' data-activates='account'>Account
+<span class="glyphicon glyphicon-chevron-down"></span>
+</a>
+</li>	
+
 </ul>
 </div>
 </nav>
@@ -65,6 +112,8 @@ belowOrigin: true // Displays dropdown below the button
 <div class="container">
 <?php 
 $msg= validation_errors(); 
+if(isset($message))
+$msg = $message;
 if(isset($msg))
 {
 	$pre = '<div class="card-panel msg teal lighten-2">
