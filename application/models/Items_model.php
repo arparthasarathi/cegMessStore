@@ -17,7 +17,8 @@ class Items_model extends CI_Model {
 					'itemName' => $item,
 					'latestRate' => $data['itemRate'][$i],
 					'quantityAvailable' => $data['quantityAvailable'][$i],
-					'minimumQuantity' => $data['minimumQuantity'][$i]
+					'minimumQuantity' => $data['minimumQuantity'][$i],
+					'clearanceStock' => $data['quantityAvailable'][$i]
 				       );
 			$this->db->trans_start();
 			if(!$this->db->insert('itemsTable',$insert))
@@ -68,6 +69,11 @@ class Items_model extends CI_Model {
 		if($return == 1)
 		{
 			$return = $this->update_stock($data);
+			if($return == 1)
+				$return = $this->insert_to_mess_return_table($data);
+			else
+				return $return;		
+
 		}
 		else
 			return $return;
@@ -113,6 +119,55 @@ class Items_model extends CI_Model {
 
 	}
 
+
+	public function get_clearance_stock($itemName)
+	{
+		$this->db->select('clearanceStock');
+		$this->db->where('itemName',$itemName);
+		$items = $this->db->get('itemsTable');
+		$result = $items->result();
+		return $result[0]->clearanceStock;
+		
+	}
+
+	public function get_rate($itemName)
+        {
+                $this->db->select('latestRate');
+                $this->db->where('itemName',$itemName);
+                $items = $this->db->get('itemsTable');
+                $result = $items->result();
+                return $result[0]->latestRate;
+
+        }
+
+
+	public function update_clearance_stock($itemName)
+	{
+		$this->db->trans_start();
+		$this->db->select('*');
+		$this->db->where('itemName',$itemName);
+		$this->db->where('consumed','0');
+		$newItems = $this->db->get('ordersTable');
+		$result = $newItems->result();
+		$newStock['latestRate'] = $result[0]->rate;
+		$newStock['quantityReceived'] = $result[0]->quantityReceived;
+		$this->db->trans_complete();
+
+		$this->db->trans_start();
+		$this->db->where('itemName',$itemName);
+		$this->db->set('latestRate',$newStock['latestRate']);
+		$this->db->set('clearanceStock', $newStock['quantityReceived']);
+		$this->db->update('itemsTable');	
+		$this->db->trans_complete();
+
+		$this->db->trans_start();
+		$this->db->where('itemName',$itemName);
+		$this->db->set('consumed','1');
+		$this->db->update('ordersTable');		
+		$this->db->trans_complete();
+	}
+	
+
 	public function insert_to_mess_consumption_table($data)
 	{
 		$size = count($data['selectedItems']);
@@ -120,7 +175,17 @@ class Items_model extends CI_Model {
 		$amount = 0;
 		for($i=0;$i<$size;$i++)
 		{
+			$clearanceStock = $this->get_clearance_stock($data['selectedItems'][$i]);
+			if($data['selectedQuantity'][$i] > $clearanceStock)
+			{
+				$this->update_clearance_stock($data['selectedItems'][$i]);
+				$amount = $clearanceStock * $data['latestRate'][$i];
+				$newRate = $this->get_rate($data['selectedItems'][$i]);
+				$amount += ($data['selectedQuantity'][$i] - $clearanceStock) * $newRate;
+			}
+			else {
 			$amount = ($data['selectedQuantity'][$i] * $data['latestRate'][$i]);
+			}
 			$totalAmount += $amount;
 			$insert = array(
 					'messName' => $data['selectedMess'],
