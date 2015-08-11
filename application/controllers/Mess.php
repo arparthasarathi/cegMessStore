@@ -51,7 +51,7 @@ class Mess extends CI_Controller {
 
 			$data['group'] = $this->ion_auth->get_logged_in_user_group_names();
 
-			$jsonMessTypes = ($this->items_model->get_mess_types_model());
+			$jsonMessTypes = ($this->mess_model->get_mess_types_model());
 
 			$messTypes = json_decode($jsonMessTypes,true);
 
@@ -215,6 +215,207 @@ class Mess extends CI_Controller {
 
 		}
 
+	}
+
+	public function get_mess_bill_report($messName,$from,$to)
+	{
+
+
+		if(!$this->ion_auth->logged_in())
+			redirect('auth/login','refresh');
+		else{
+			$data['username'] = $this->ion_auth->user()->row()->username;
+
+			$data['group'] = $this->ion_auth->get_logged_in_user_group_names();
+
+			$messName = urldecode($messName);
+			$from = urldecode($from);
+			$to= urldecode($to);
+			$from = date('Y-m-d',strtotime($from));
+			$to = date('Y-m-d',strtotime($to));
+			$messBill = ($this->mess_model->generate_mess_bill($messName,$from,$to));
+			echo json_encode($messBill);
+		}
+
+	}
+
+	public function get_mess_vegetable_bill_report($messName,$from,$to)
+	{
+
+
+		if(!$this->ion_auth->logged_in())
+			redirect('auth/login','refresh');
+		else{
+			$data['username'] = $this->ion_auth->user()->row()->username;
+
+			$data['group'] = $this->ion_auth->get_logged_in_user_group_names();
+
+			$messName = urldecode($messName);
+			$from = urldecode($from);
+			$to= urldecode($to);
+			$from = date('Y-m-d',strtotime($from));
+			$to = date('Y-m-d',strtotime($to));
+			$messBill = ($this->mess_model->generate_mess_vegetable_bill($messName,$from,$to));
+			echo json_encode($messBill);
+		}
+
+	}
+
+	public function get_mess_consumption_report($messName,$from,$to)
+	{
+		if(!$this->ion_auth->logged_in())
+			redirect('auth/login','refresh');
+		else
+		{
+			$data['username'] = $this->ion_auth->user()->row()->username;
+
+			$data['group'] = $this->ion_auth->get_logged_in_user_group_names();
+
+			$messName = urldecode($messName);
+			$from = urldecode($from);
+			$to= urldecode($to);
+			$from = date('Y-m-d',strtotime($from));
+			$to = date('Y-m-d',strtotime($to));
+			$messConsumption = ($this->mess_model->generate_mess_consumption($messName,$from,$to));
+			echo json_encode($messConsumption);
+		}
+
+	}
+
+
+	public function get_mess_vegetable_consumption_report($messName,$from,$to)
+	{
+		if(!$this->ion_auth->logged_in())
+			redirect('auth/login','refresh');
+		else
+		{
+			$data['username'] = $this->ion_auth->user()->row()->username;
+
+			$data['group'] = $this->ion_auth->get_logged_in_user_group_names();
+
+			$messName = urldecode($messName);
+			$from = urldecode($from);
+			$to= urldecode($to);
+			$from = date('Y-m-d',strtotime($from));
+			$to = date('Y-m-d',strtotime($to));
+			$messConsumption = ($this->mess_model->generate_mess_vegetable_consumption($messName,$from,$to));
+			echo json_encode($messConsumption);
+		}
+
+	}
+
+
+	public function get_mess_return_report($messName,$from,$to)
+	{
+		if(!$this->ion_auth->logged_in())
+			redirect('auth/login','refresh');
+		else
+		{
+			$data['username'] = $this->ion_auth->user()->row()->username;
+
+			$data['group'] = $this->ion_auth->get_logged_in_user_group_names();
+
+			$messName = urldecode($messName);
+			$from = urldecode($from);
+			$to= urldecode($to);
+			$from = date('Y-m-d',strtotime($from));
+			$to = date('Y-m-d',strtotime($to));
+			$messReturn = ($this->mess_model->generate_mess_return($messName,$from,$to));
+			echo json_encode($messReturn);
+		}
+
+	}
+
+	public function mess_bill()
+	{
+
+		if(!$this->ion_auth->logged_in())
+			redirect('auth/login','refresh');
+		else{
+			$data['title'] = "Mess Bill";
+			$data['username'] = $this->ion_auth->user()->row()->username;
+
+
+			$data['group'] = $this->ion_auth->get_logged_in_user_group_names();
+
+			$this->load->view('templates/header');
+			$this->load->view('templates/body',$data);
+			$data['messTypes'] = $this->get_mess_types();
+
+			$this->load->view('mess/mess_bill',$data);
+		}
+	}
+
+	public function mess_vegetable_bill()
+	{
+
+		if(!$this->ion_auth->logged_in())
+			redirect('auth/login','refresh');
+		else{
+			$data['title'] = "Mess Vegetable Bill";
+			$data['username'] = $this->ion_auth->user()->row()->username;
+
+
+			$data['group'] = $this->ion_auth->get_logged_in_user_group_names();
+
+			$this->load->view('templates/header');
+			$this->load->view('templates/body',$data);
+			$data['messTypes'] = $this->get_mess_types();
+
+			$this->load->view('mess/mess_vegetable_bill',$data);
+		}
+	}
+
+	public function mess_consumption()
+	{
+		if(!$this->ion_auth->logged_in())
+			redirect('auth/login','refresh');
+		else {
+			$data['title'] = "Mess Consumption";
+			$data['username'] = $this->ion_auth->user()->row()->username;
+
+			$data['group'] = $this->ion_auth->get_logged_in_user_group_names();
+
+			$this->load->view('templates/header');
+			$this->load->view('templates/body',$data);
+			$data['messTypes'] = $this->get_mess_types();
+			$this->load->view('mess/mess_consumption',$data);
+		}
+	}
+
+	public function mess_vegetable_consumption()
+	{
+		if(!$this->ion_auth->logged_in())
+			redirect('auth/login','refresh');
+		else {
+			$data['title'] = "Mess Vegetable Consumption";
+			$data['username'] = $this->ion_auth->user()->row()->username;
+
+			$data['group'] = $this->ion_auth->get_logged_in_user_group_names();
+
+			$this->load->view('templates/header');
+			$this->load->view('templates/body',$data);
+			$data['messTypes'] = $this->get_mess_types();
+			$this->load->view('mess/mess_vegetable_consumption',$data);
+		}
+	}
+
+	public function mess_return()
+	{
+		if(!$this->ion_auth->logged_in())
+			redirect('auth/login','refresh');
+		else {
+			$data['title'] = "Mess Returns";
+			$data['username'] = $this->ion_auth->user()->row()->username;
+
+			$data['group'] = $this->ion_auth->get_logged_in_user_group_names();
+
+			$this->load->view('templates/header');
+			$this->load->view('templates/body',$data);
+			$data['messTypes'] = $this->get_mess_types();
+
+			$this->load->view('mess/mess_return',$data);
+		}
 	}
 
 
