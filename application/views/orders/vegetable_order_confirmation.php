@@ -1,4 +1,4 @@
-<?php echo form_open('orders/order_confirmation') ?>
+<?php echo form_open('orders/vegetable_order_confirmation') ?>
 <div class="row">
    <div class="col s6"> 
       <span class="blue-text txt-darken-2">Order Number:</span>
@@ -19,6 +19,15 @@
    </div>
 </div>
 <div class="row">
+   <div class="col s6">
+      <span class="blue-text text-darken-2">Selected Mess</span>
+   </div>
+   <div class="col s6">
+      <span class="blue-text text-darken-2"><?php echo $selectedMess;?></span>
+      <input type='hidden' name='selectedMess' value='<?php echo $selectedMess;?>'/>
+   </div>
+</div>
+<div class="row">
    <div class="col s3">
       <span class="blue-text text-darken-2">Bill Number</span>
    </div>
@@ -35,6 +44,7 @@
    </div>
 
 </div>
+
 
 <div class="row">
    <div class="col s4">
@@ -105,7 +115,7 @@
    var date = new Date();
    var components = [
    date.getFullYear(),
-   date.getMonth(),
+   date.getMonth()+1,
    date.getDate(),
    date.getHours(),
    date.getMinutes(),
@@ -113,6 +123,7 @@
    ];
 
    var id = components.join("-");
+   id = 'VEG'+id;
    $('.order_number').html(id);
    $('#orderNo').val(id);
 </script>

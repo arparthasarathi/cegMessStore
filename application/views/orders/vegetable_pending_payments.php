@@ -28,7 +28,7 @@
 
    function get_pending_payments(){
          $.ajax({
-               url : 'get_pending_payments/',
+               url : 'get_vegetable_pending_payments/',
                type: 'GET',
                dataType: 'json',
                success : function(data){
@@ -79,60 +79,81 @@
 
 
    </script>
-   <form action="generate_abstract" method="post">
+   <style type="text/css">
+      .controls {
+            margin: 75px;
+         }
 
-      <div id="reportArea" value='reportArea'>
+         select {
+               border-size: 2px;
+               border-color: #000066;
+               border-radius: 4px;
+            }
+
+            .controls a {
+                  border-radius: 4px;
+                  font-size: 15px;
+                  text-align: center;
+                  width: 100px;
+               }
+
+
+            </style>
+
+            <form action="generate_vegetable_abstract" method="post">
+
+               <div id="reportArea" value='reportArea'>
 
 
 
-         <div class="row">
-            <div class="col s12">
-               <div class="col s3">
-                  <span class="blue-text">Order ID</span>
+                  <div class="row">
+                     <div class="col s12">
+                        <div class="col s3">
+                           <span class="blue-text">Order ID</span>
+                        </div>
+
+                        <div class="col s3">
+                           <span class="blue-text">Vendor Name</span>
+                        </div>
+
+                        <div class="col s3">
+                           <span class="blue-text">Received Date</span>
+                        </div>
+
+
+                     </div>
+                  </div>
+
+
+
+                  <div class="row">
+                     <div class="col s12">
+                        <div id="vendorsList">
+                        </div>
+                     </div>
+                  </div>
+
                </div>
 
-               <div class="col s3">
-                  <span class="blue-text">Vendor Name</span>
+               <div class="row">
+                  <div class="col s4 offset-s6">
+
+                     <a href="../reports/printReport" class="btn waves-effect waves-light btn-large" 
+                        value="print" name="print" id="print-report">
+                        Print
+                     </a>
+
+                  </div>
+
+                  <div class="col s4 offset-s6">
+
+                     <button class="btn waves-effect waves-light btn-large" type="submit" 
+                        value="submit" name="submit" id="submit">
+                        Generate Abstract
+                     </button>
+
+                  </div>
+
                </div>
-
-               <div class="col s3">
-                  <span class="blue-text">Received Date</span>
-               </div>
-
-
-            </div>
+            </form>
          </div>
-
-
-
-         <div class="row">
-            <div class="col s12">
-               <div id="vendorsList">
-               </div>
-            </div>
-         </div>
-
-      </div>
-
-      <div class="row">
-         <div class="col s4 offset-s6">
-
-            <a href="../reports/printReport" class="btn waves-effect waves-light btn-large" 
-               value="print" name="print" id="print-report">
-               Print
-            </a>
-
-         </div>
-
-         <div class="col s4 offset-s6">
-
-            <button class="btn waves-effect waves-light btn-large" type="submit" 
-               value="submit" name="submit" id="submit">
-               Generate Abstract
-            </button>
-
-         </div>
-
-      </div>
-   </form>
-</div>
