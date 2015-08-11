@@ -36,6 +36,33 @@ class Items_model extends CI_Model {
 		return 1;
 	}
 
+     public function add_vegetable_model($data)
+    {
+
+        for($i=0;$i<count($data['itemName']);$i++)
+        {
+            $item = strtoupper($data['itemName'][$i]);
+            $insert = array(
+                    'vegetableName' => $item,
+                       );
+            $this->db->trans_start();
+            if(!$this->db->insert('vegetablesTable',$insert))
+            {
+                $error=$this->db->error();
+                $this->db->trans_complete();
+                return $error['message'];
+            }
+            else
+            {
+                $this->db->trans_complete();
+                continue;
+            }
+        }
+        return 1;
+    }
+
+
+
 	public function return_item_model($data)
 	{
 		$remainingStock = array();
@@ -120,6 +147,33 @@ class Items_model extends CI_Model {
 	}
 
 
+	public function order_receive_model($data)
+        {
+                $remainingStock = array();
+                $itemNames = $data['selectedItems'];
+                $quantityAvailable = $data['quantityAvailable'];
+                $selectedQuantity = $data['selectedQuantity'];
+                for($i=0;$i<count($itemNames);$i++)
+                {
+                        $eachAvailable = $quantityAvailable[$i];
+                        $eachSelected = $selectedQuantity[$i];
+                        $sum = $eachAvailable + $eachSelected;
+                        array_push($remainingStock,$sum);
+                }
+                $data['remainingStock'] = $remainingStock;
+                $return = $this->insert_to_orders_table($data);
+                if($return == 1)
+                {
+                        $return = $this->update_stock($data);
+                }
+                else
+                        return $return;
+
+                return $return;
+
+        }
+
+
 	public function get_clearance_stock($itemName)
 	{
 		$this->db->select('clearanceStock');
@@ -165,8 +219,8 @@ class Items_model extends CI_Model {
 		$this->db->set('consumed','1');
 		$this->db->update('ordersTable');		
 		$this->db->trans_complete();
-	}
 	
+	}
 
 	public function insert_to_mess_consumption_table($data)
 	{
@@ -190,7 +244,7 @@ class Items_model extends CI_Model {
 			$insert = array(
 					'messName' => $data['selectedMess'],
 					'itemName' => $data['selectedItems'][$i],
-					'suppliedDate' => date('Y-m-d'),
+					'suppliedDate' => $data['issuedDate'],
 					'quantitySupplied' => $data['selectedQuantity'][$i],
 					'rate' => $data['latestRate'][$i],
 					'amount' => ($amount)
@@ -210,7 +264,7 @@ class Items_model extends CI_Model {
 			}
 		}
 
-		$billReturn = $this->insert_to_mess_bill($data['selectedMess'],date('Y-m-d'),$totalAmount);
+		$billReturn = $this->insert_to_mess_bill($data['selectedMess'],$data['issuedDate'],$totalAmount);
 		if($billReturn == 1)
 		{
 			return 1;
@@ -218,6 +272,42 @@ class Items_model extends CI_Model {
 		else 
 		{
 			return $billReturn;
+		}
+
+		return 1;	
+	}
+
+	public function insert_to_orders_table($data)
+	{
+		$size = count($data['selectedItems']);
+		$totalAmount = 0;
+		$amount = 0;
+		for($i=0;$i<$size;$i++)
+		{
+			$amount = ($data['selectedQuantity'][$i] * $data['latestRate'][$i]);
+			$totalAmount += $amount;
+			$insert = array(
+					'orderID' => $data['orderNo'],
+					'vendorName' => $data['selectedVendor'],
+					'itemName' => $data['selectedItems'][$i],
+					'receivedDate' => date('Y-m-d'),
+					'quantityReceived' => $data['selectedQuantity'][$i],
+					'rate' => $data['latestRate'][$i],
+					'amount' => ($amount),
+				       );
+			$this->db->trans_start();
+			if(!$this->db->insert('ordersTable',$insert))
+			{
+				$error=$this->db->error();
+				$this->db->trans_complete();
+				return $error['message'];
+			}
+			else
+			{	
+
+				$this->db->trans_complete();
+				continue;			
+			}
 		}
 
 		return 1;	
@@ -235,7 +325,7 @@ class Items_model extends CI_Model {
 			$insert = array(
 					'messName' => $data['selectedMess'],
 					'itemName' => $data['selectedItems'][$i],
-					'returnedDate' => date('Y-m-d'),
+					'returnedDate' => $data['issuedDate'],
 					'quantityReturned' => $data['selectedQuantity'][$i],
 					'rate' => $data['latestRate'][$i],
 					'amount' => ($amount)
@@ -284,6 +374,8 @@ class Items_model extends CI_Model {
 
 	}
 
+
+
 	public function insert_to_mess_bill($selectedMess,$billDate,$totalAmount)
 	{
 		$insert = array(
@@ -318,7 +410,7 @@ class Items_model extends CI_Model {
 			$this->db->trans_start();
 			$this->db->where('messName',$data['selectedMess']);
 			$this->db->where('itemName',$data['selectedItems'][$i]);
-			$this->db->where('suppliedDate',date('Y-m-d'));
+			$this->db->where('suppliedDate',$data['issuedDate']);
 			if(!$this->db->update('messConsumptionTable',$update))
 			{
 				$error=$this->db->error();
@@ -333,7 +425,7 @@ class Items_model extends CI_Model {
 				continue;		 
 			}
 		}
-		$billReturn = $this->update_mess_bill($data['selectedMess'],date('Y-m-d'),$totalReducedAmount);
+		$billReturn = $this->update_mess_bill($data['selectedMess'],$data['issuedDate'],$totalReducedAmount);
 		if($billReturn == 1)
 		{
 
@@ -446,6 +538,47 @@ class Items_model extends CI_Model {
 	}
 
 
+	
+
+	public function get_vendors()
+	{
+
+		$return['vendorName'] = array();
+		$return['ownerName'] = array();
+		$return['address'] = array();
+		$return['contact'] = array();
+		$vendors = $this->db->get('vendorsTable');
+		foreach($vendors->result() as $row){
+
+			array_push($return['vendorName'],$row->vendorName);
+			array_push($return['ownerName'],$row->ownerName);
+			array_push($return['address'],$row->address);
+			array_push($return['contact'],$row->contact);
+		}
+		return json_encode(array("vendorName" => $return['vendorName'],
+					"ownerName" => $return['ownerName'],
+					"address" => $return['address'],
+					"contact" => $return['contact']));
+
+	}
+	
+	public function add_vendor($data)
+	{
+		$insert = array( "vendorName" => $data['vendorName'],
+				 "ownerName" => $data['ownerName'],
+				"address" => $data['address'],
+				"contact" => $data['contact']);
+		$this->db->trans_start();
+                if(!$this->db->insert('vendorsTable',$insert))
+                {
+                        $error=$this->db->error();
+                        $this->db->trans_complete();
+                        return $error['message'];
+                }
+                $this->db->trans_complete();
+                return 1;
+
+	}	
 
 
 
@@ -454,6 +587,7 @@ class Items_model extends CI_Model {
 		$itemName = array();
 		$latestRate = array();
 		$quantityAvailable = array();
+        $clearanceStock = array();
 		if(isset($names) && $names != null)
 		{
 			$this->db->where_in('itemName',$names);
@@ -468,9 +602,55 @@ class Items_model extends CI_Model {
 			array_push($itemName,$row->itemName);
 			array_push($latestRate,$row->latestRate);
 			array_push($quantityAvailable,$row->quantityAvailable);
+            array_push($clearanceStock,$row->clearanceStock);
 		}
-		return json_encode(array("itemNames" => $itemName, "latestRate" => $latestRate, "quantityAvailable" => $quantityAvailable));
+		return json_encode(array("itemNames" => $itemName, "latestRate" => $latestRate, "quantityAvailable" => $quantityAvailable,"clearanceStock" => $clearanceStock));
 	}
+
+    public function get_vegetables($names=null)
+    {
+        $itemName = array();
+        $latestRate = array();
+        $quantityAvailable = array();
+        if(isset($names) && $names != null)
+        {
+            $this->db->where_in('vegetableName',$names);
+            $items = $this->db->get('vegetablesTable');
+        }
+        else
+        {
+            $items = $this->db->get('vegetablesTable');
+        }
+        foreach($items->result() as $row)
+        {
+            array_push($itemName,$row->vegetableName);
+        }
+        return json_encode(array("itemNames" => $itemName));
+    }
+
+	
+	public function insert_to_mess_vegetable_bill($selectedMess,$billDate,$totalAmount)
+	{
+		$insert = array(
+				'messName' => $selectedMess,
+				'date' => $billDate,
+				'totalAmount' => $totalAmount
+			       );
+		$this->db->trans_start();
+		if(!$this->db->insert('messVegetableBill',$insert))
+		{
+			$error=$this->db->error();
+			$this->db->trans_complete();
+			return $error['message'];
+		}
+		$this->db->trans_complete();
+		return 1;
+	}
+
+
+
+
+
 
 	public function get_available_stock($itemList = null)
 	{
