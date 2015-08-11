@@ -44,6 +44,41 @@ class Auth extends CI_Controller {
 		}
 	}
 
+	function edit_existing_users()
+	{
+
+		if (!$this->ion_auth->logged_in())
+		{
+			//redirect them to the login page
+			redirect('auth/login', 'refresh');
+		}
+		elseif (!$this->ion_auth->is_admin()) //remove this elseif if you want to enable this for non-admins
+		{
+			//redirect them to the home page because they must be an administrator to view this
+			return show_error('You must be an administrator to view this page.');
+		}
+		else
+		{
+			//set the flash data error message if there is one
+			$data['username'] = $this->ion_auth->user()->row()->username;
+
+			$data['group'] = $this->ion_auth->get_logged_in_user_group_names();
+			$this->load->view('templates/header');
+			$this->load->view('templates/body',$data);
+			$this->data['message'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('message');
+
+			//list the users
+			$this->data['users'] = $this->ion_auth->users()->result();
+			foreach ($this->data['users'] as $k => $user)
+			{
+				$this->data['users'][$k]->groups = $this->ion_auth->get_users_groups($user->id)->result();
+			}
+
+			$this->_render_page('auth/index', $this->data);
+			$this->load->view('templates/footer');
+		}
+	}
+
 	//log the user in
 	function login()
 	{
@@ -113,6 +148,7 @@ class Auth extends CI_Controller {
 	//change password
 	function change_password()
 	{
+
 		$this->form_validation->set_rules('old', $this->lang->line('change_password_validation_old_password_label'), 'required');
 		$this->form_validation->set_rules('new', $this->lang->line('change_password_validation_new_password_label'), 'required|min_length[' . $this->config->item('min_password_length', 'ion_auth') . ']|max_length[' . $this->config->item('max_password_length', 'ion_auth') . ']|matches[new_confirm]');
 		$this->form_validation->set_rules('new_confirm', $this->lang->line('change_password_validation_new_password_confirm_label'), 'required');
@@ -128,6 +164,11 @@ class Auth extends CI_Controller {
 		{
 			//display the form
 			//set the flash data error message if there is one
+			$data['username'] = $this->ion_auth->user()->row()->username;
+			$data['group'] = $this->ion_auth->get_logged_in_user_group_names();
+			$this->load->view('templates/header');
+			$this->load->view('templates/body',$data);
+		
 			$this->data['message'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('message');
 
 			$this->data['min_password_length'] = $this->config->item('min_password_length', 'ion_auth');
@@ -157,10 +198,16 @@ class Auth extends CI_Controller {
 
 			//render
 			$this->_render_page('auth/change_password', $this->data);
+			$this->load->view('templates/footer');
 		}
 		else
 		{
+			$data['username'] = $this->ion_auth->user()->row()->username;
+
+			$data['group'] = $this->ion_auth->get_logged_in_user_group_names();
 			$identity = $this->session->userdata('identity');
+			$this->load->view('templates/header');
+			$this->load->view('templates/body',$data);
 
 			$change = $this->ion_auth->change_password($identity, $this->input->post('old'), $this->input->post('new'));
 
@@ -175,6 +222,7 @@ class Auth extends CI_Controller {
 				$this->session->set_flashdata('message', $this->ion_auth->errors());
 				redirect('auth/change_password', 'refresh');
 			}
+			$this->load->view('templates/footer');
 		}
 	}
 
